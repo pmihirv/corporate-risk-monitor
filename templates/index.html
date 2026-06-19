@@ -16,7 +16,7 @@
             </h1>
         </div>
         <div class="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
-            v2.5 High-Precision Model Active
+            v3.2 Real-time Sync Active
         </div>
     </header>
 
@@ -33,14 +33,13 @@
                     </button>
                 </div>
                 <p id="tickerFeedback" class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                    Type any global ticker. Try <span class="text-emerald-400 font-mono">NVDA</span> (Safe Baseline), <span class="text-rose-400 font-mono">AMC</span> (Distressed Risk Asset), or local small-caps to challenge the classifier framework.
+                    Type any global ticker. Try <span class="text-emerald-400 font-mono">NVDA</span> or <span class="text-rose-400 font-mono">AMC</span> to test structural limits.
                 </p>
             </div>
 
             <div class="flex justify-between items-center mb-6">
                 <div>
                     <h2 class="text-lg font-semibold text-white">Financial & Alternative Inputs</h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Adjust compiled parameters below</p>
                 </div>
                 <button type="button" onclick="loadDemoData()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg border border-slate-700 transition">
                     ⚡ Reset Demo
@@ -68,8 +67,7 @@
 
                 <div>
                     <label class="block text-xs font-medium text-slate-300 mb-1">X3: EBITDA / Total Assets</label>
-                    <input type="number" step="0.0001" id="x3" required oninput="validateRatios()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-                    <p id="x3Warning" class="text-[11px] text-amber-400 mt-1 hidden">⚠️ Warning: High asset returns detected. Double check balance statement accuracy.</p>
+                    <input type="number" step="0.0001" id="x3" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
                 </div>
 
                 <div>
@@ -83,11 +81,8 @@
                 </div>
 
                 <div class="pt-2 border-t border-slate-700/50 mt-4">
-                    <div class="flex items-center justify-between mb-1">
-                        <label class="block text-xs font-medium text-slate-300">Alternative Textual Sentiment Score</label>
-                        <span class="text-[10px] text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded border border-cyan-800/40">FinBERT NLP Bounds</span>
-                    </div>
-                    <input type="number" step="0.01" min="-1" max="1" id="sentiment" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition" placeholder="Range: -1.00 to +1.00">
+                    <label class="block text-xs font-medium text-slate-300 mb-1">Alternative Textual Sentiment Score</label>
+                    <input type="number" step="0.01" min="-1" max="1" id="sentiment" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
                 </div>
 
                 <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm font-semibold py-3 px-4 rounded-xl mt-4 shadow-lg shadow-emerald-900/20 transition flex items-center justify-center">
@@ -100,7 +95,6 @@
             <div id="placeholderView" class="h-full flex flex-col items-center justify-center border border-dashed border-slate-700 rounded-2xl p-12 text-center bg-slate-800/20">
                 <div class="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 mb-4 text-slate-400 text-xl font-bold">?</div>
                 <h3 class="text-base font-semibold text-slate-200">Awaiting Evaluation Pipeline</h3>
-                <p class="text-xs text-slate-400 max-w-sm mt-1">Input operational parameters or query an automated stock ticker to visualize the credit risk modeling output instantly.</p>
             </div>
 
             <div id="resultsView" class="hidden h-full flex flex-col justify-between bg-slate-800/40 border border-slate-700 rounded-2xl p-6 shadow-xl">
@@ -132,38 +126,23 @@
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">System Interpretation</span>
                         <p id="interpretationText" class="text-xs text-slate-300 leading-relaxed">--</p>
                     </div>
-                </div>
 
-                <div class="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-400 leading-relaxed">
-                    <strong>Methodology Alignment:</strong> <span id="methodologyText">Public manufacturing thresholds apply (Z > 2.99 Safe, Z < 1.81 Distress).</span> FinBERT parameters adjust decision weights within tree structures.
+                    <button type="button" onclick="downloadExecutivePDF()" class="w-full bg-slate-700 hover:bg-slate-600 text-xs font-semibold py-2.5 px-4 rounded-xl mt-4 border border-slate-600/50 transition text-center flex items-center justify-center space-x-2">
+                        <span>📥 Download Executive Risk Report (PDF)</span>
+                    </button>
                 </div>
             </div>
         </section>
     </main>
 
-    <footer class="max-w-7xl mx-auto px-4 py-6 border-t border-slate-800 text-center text-xs text-slate-500">
-        Disclaimer: This monitor is for educational and portfolio research purposes only. It does not constitute financial or investment advice.
-    </footer>
-
     <script>
+        let lastEvaluationData = null;
+        let activeCompanyName = "Custom Profile Evaluation";
+
         function handleFirmTypeChange() {
             const type = document.getElementById('firmType').value;
             const label = document.getElementById('x4Label');
-            if (type === 'private') {
-                label.innerText = "X4: Book Value of Equity / Total Liabilities";
-            } else {
-                label.innerText = "X4: Market Cap / Total Liabilities";
-            }
-        }
-
-        function validateRatios() {
-            const x3 = parseFloat(document.getElementById('x3').value);
-            const warning = document.getElementById('x3Warning');
-            if (x3 > 4.0) {
-                warning.classList.remove('hidden');
-            } else {
-                warning.classList.add('hidden');
-            }
+            label.innerText = type === 'private' ? "X4: Book Value of Equity / Total Liabilities" : "X4: Market Cap / Total Liabilities";
         }
 
         function loadDemoData() {
@@ -175,57 +154,46 @@
             document.getElementById('x4').value = (0.2500).toFixed(4);
             document.getElementById('x5').value = (0.7500).toFixed(4);
             document.getElementById('sentiment').value = -0.65;
-            validateRatios();
+            document.getElementById('tickerFeedback').innerHTML = 'Type any global ticker. Try <span class="text-emerald-400 font-mono">NVDA</span> or <span class="text-rose-400 font-mono">AMC</span> to test structural limits.';
         }
 
-        // Asynchronous yfinance connecting bridge
         async function fetchTickerRatios() {
             const symbol = document.getElementById('tickerInput').value.trim();
             const btn = document.getElementById('lookupBtn');
             const feedback = document.getElementById('tickerFeedback');
-            
-            if (!symbol) {
-                alert('Please input a valid stock ticker symbol first.');
-                return;
-            }
+            if (!symbol) return;
             
             btn.disabled = true;
-            btn.innerText = 'Searching...';
-            feedback.innerHTML = `⏳ Extracting macro-accounting parameters for <span class="font-bold text-white uppercase">${symbol}</span>...`;
+            feedback.innerHTML = `⏳ Fetching financial parameters for <span class="font-bold text-white uppercase">${symbol}</span>...`;
 
             try {
                 const response = await fetch(`/api/ticker/${symbol}`);
-                if (!response.ok) throw new Error('Symbol lookup failed or accounting statements are incomplete.');
-                
+                if (!response.ok) throw new Error('Symbol lookup failed or structural reporting incomplete.');
                 const data = await response.json();
                 
-                // FIXED: Explicitly maps the high-precision 4-decimal float format directly to the field values
                 document.getElementById('x1').value = data.x1.toFixed(4);
                 document.getElementById('x2').value = data.x2.toFixed(4);
                 document.getElementById('x3').value = data.x3.toFixed(4);
                 document.getElementById('x4').value = data.x4.toFixed(4);
                 document.getElementById('x5').value = data.x5.toFixed(4);
-                
                 document.getElementById('sentiment').value = data.x1 > 0 ? 0.25 : -0.35;
                 
-                feedback.innerHTML = `✅ Financials extracted successfully for <strong class="text-cyan-400">${data.company_name}</strong>! Review data layers and execute to run pipeline.`;
-                validateRatios();
+                activeCompanyName = data.company_name;
                 
+                // RESTORED: Flash the complete company corporate identity string right below the input box layout
+                feedback.innerHTML = `✅ Data parsed successfully for: <strong class="text-cyan-400">${activeCompanyName}</strong>`;
             } catch (err) {
                 feedback.innerHTML = `❌ Error: ${err.message}`;
                 alert(err.message);
             } finally {
                 btn.disabled = false;
-                btn.innerText = 'Fetch Ratios';
             }
         }
 
         async function evaluateRisk(event) {
             event.preventDefault();
             const btn = document.getElementById('submitBtn');
-            const btnText = document.getElementById('btnText');
             btn.disabled = true;
-            btnText.innerText = 'Executing Model Pipeline...';
 
             const payload = {
                 working_capital_ta: parseFloat(document.getElementById('x1').value),
@@ -256,39 +224,63 @@
 
                 const badge = document.getElementById('zoneBadge');
                 badge.innerText = data.financial_risk_zone;
-                
-                const scoreLabel = document.getElementById('scoreLabel');
-                const methText = document.getElementById('methodologyText');
-                
-                if (payload.firm_type === 'private') {
-                    scoreLabel.innerText = "Calculated Altman Z'-Score";
-                    methText.innerText = "Private firm thresholds apply (Z' > 2.90 Safe, Z' < 1.23 Distress Variant).";
-                } else {
-                    scoreLabel.innerText = "Calculated Altman Z-Score";
-                    methText.innerText = "Public manufacturing thresholds apply (Z > 2.99 Safe, Z < 1.81 Distress).";
-                }
 
-                let text = "";
                 if (data.financial_risk_zone === "Safe Zone") {
                     badge.className = "inline-block font-bold px-3 py-1 rounded-lg text-xs mt-2 bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
-                    text = "The enterprise displays robust balance sheet health with strong working capital reserves and steady revenue generation. Combined with supportive textual data, insolvency risk is minimal.";
+                    document.getElementById('interpretationText').innerText = "The enterprise displays robust balance sheet health with strong capital reserves.";
                 } else if (data.financial_risk_zone === "Grey Zone") {
                     badge.className = "inline-block font-bold px-3 py-1 rounded-lg text-xs mt-2 bg-amber-500/10 border-amber-500/30 text-amber-400";
-                    text = "Operational metrics show structural instability or low asset turnover efficiency. The organization sits in a transition zone; careful monitoring of capital reserves and media sentiment is highly advised.";
+                    document.getElementById('interpretationText').innerText = "Operational metrics show structural instability. Monitoring is advised.";
                 } else {
                     badge.className = "inline-block font-bold px-3 py-1 rounded-lg text-xs mt-2 bg-rose-500/10 border-rose-500/30 text-rose-400";
-                    text = "CRITICAL WARNING: The entity exhibits deep capital preservation distress, negative operational cash flows, or severe structural debt pressure. High probability of default or credit restructuring within 12-24 months.";
+                    document.getElementById('interpretationText').innerText = "CRITICAL WARNING: High probability of default within 12-24 months.";
                 }
-                document.getElementById('interpretationText').innerText = text;
+
+                lastEvaluationData = {
+                    company_name: document.getElementById('tickerInput').value.trim() ? activeCompanyName : "Custom Profile Evaluation",
+                    altman_z_score: data.altman_z_score,
+                    financial_risk_zone: data.financial_risk_zone,
+                    ml_risk_probability: data.ml_risk_probability,
+                    model_classification: data.model_classification,
+                    x1: payload.working_capital_ta,
+                    x2: payload.retained_earnings_ta,
+                    x3: payload.ebitda_ta,
+                    x4: payload.market_cap_tl,
+                    x5: payload.sales_ta,
+                    sentiment: payload.sentiment
+                };
 
             } catch (err) {
-                alert('Pipeline Processing Error: ' + err.message);
+                alert('Error: ' + err.message);
             } finally {
                 btn.disabled = false;
-                btnText.innerText = 'Execute Risk Evaluation';
             }
         }
-        
+
+        async function downloadExecutivePDF() {
+            if (!lastEvaluationData) {
+                alert('Please execute a risk evaluation pipeline loop first before downloading reports.');
+                return;
+            }
+            try {
+                const response = await fetch('/api/report/download', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(lastEvaluationData)
+                });
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Risk_Report_${lastEvaluationData.company_name.replace(/\s+/g, '_')}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch (err) {
+                alert('PDF Engine Error: ' + err.message);
+            }
+        }
+
         loadDemoData();
     </script>
 </body>
