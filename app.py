@@ -1,9 +1,13 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
 import joblib
 import numpy as np
 import pandas as pd
+import traceback
+import os
 
 app = FastAPI(
     title="Enterprise Insolvency Risk Monitor API",
@@ -11,7 +15,6 @@ app = FastAPI(
     version="2.0"
 )
 
-# Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,14 +23,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load the newly trained ML pipeline binary
+current_dir = os.path.dirname(os.path.abspath(__file__))
+templates_dir = os.path.join(current_dir, "templates")
+templates = Jinja2Templates(directory=templates_dir)
+
 try:
     model = joblib.load("pipeline.joblib")
 except Exception as e:
     print(f"Error loading model binary: {e}")
     model = None
 
-# 1. Upgraded Request Schema mapping all 5 Altman Variables + Sentiment
 class RiskEvaluationRequest(BaseModel):
     working_capital_ta: float = Field(..., description="X1: Working Capital / Total Assets")
     retained_earnings_ta: float = Field(..., description="X2: Retained Earnings / Total Assets")
@@ -36,20 +41,22 @@ class RiskEvaluationRequest(BaseModel):
     sales_ta: float = Field(..., description="X5: Sales / Total Assets")
     sentiment: float = Field(..., description="Alternative Textual Sentiment Score (-1.0 to 1.0)")
 
-@app.get("/")
-def home():
-    return {
-        "status": "online",
-        "framework": "Modified Altman Z-Score (5 Ratios) + NLP Sentiment",
-        "documentation": "/docs"
-    }
+@app.get("/", response_class=HTMLResponse)
+def home(request: Request):
+    try:
+        # Fixed: Explicitly passing parameters resolves the unhashable type dictionary bug
+        return templates.TemplateResponse(request=request, name="index.html")
+    except Exception as e:
+        print("\n" + "="*50 + "\nCRITICAL FRONTEND RENDER ERROR:\n" + "="*50)
+        traceback.print_exc()
+        print("="*50 + "\n")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/predict")
 def predict_risk(payload: RiskEvaluationRequest):
     if not model:
         raise HTTPException(status_code=500, detail="ML model binary not compiled or loaded.")
     
-    # 2. Extract inputs into DataFrame format matching training features
     input_data = pd.DataFrame([{
         'working_capital_ta': payload.working_capital_ta,
         'retained_earnings_ta': payload.retained_earnings_ta,
@@ -60,8 +67,6 @@ def predict_risk(payload: RiskEvaluationRequest):
     }])
     
     try:
-        # 3. Calculate Classic Altman Z-Score baseline for public firms
-        # Z = 1.2*X1 + 1.4*X2 + 3.3*X3 + 0.6*X4 + 1.0*X5
         z_score = (
             1.2 * payload.working_capital_ta +
             1.4 * payload.retained_earnings_ta +
@@ -70,12 +75,10 @@ def predict_risk(payload: RiskEvaluationRequest):
             1.0 * payload.sales_ta
         )
         
-        # 4. Compute ML dynamic classification probability
         prediction = int(model.predict(input_data)[0])
         probabilities = model.predict_proba(input_data)[0]
         risk_probability = float(probabilities[1])
         
-        # Determine strict financial risk band zone based on standard Z-Score thresholds
         if z_score >= 2.99:
             zone = "Safe Zone"
         elif z_score >= 1.81:

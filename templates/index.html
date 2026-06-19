@@ -4,67 +4,196 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise Insolvency Risk Monitor</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', system-ui, sans-serif; }
-        .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .metric-help { font-size: 0.825rem; color: #6c757d; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="container py-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="text-center mb-4">
-                    <h1 class="fw-bold text-dark">Enterprise Insolvency Risk Monitor</h1>
-                    <p class="text-muted">Real-time solvency assessment combining foundational financial ratios with alternative textual sentiment data.</p>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
+
+    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="h-3 w-3 bg-emerald-500 rounded-full animate-pulse"></div>
+            <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                Insolvency Risk Monitor
+            </h1>
+        </div>
+        <div class="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
+            v2.0 Framework Active
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <section class="lg:col-span-5 bg-slate-800/50 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h2 class="text-lg font-semibold text-white">Financial & Alternative Inputs</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Enter public firm financial statement ratios</p>
+                </div>
+                <button type="button" onclick="loadDemoData()" class="text-xs bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 font-medium px-3 py-1.5 rounded-lg border border-cyan-500/30 transition">
+                    ⚡ Load Demo
+                </button>
+            </div>
+
+            <form id="riskForm" class="space-y-4" onsubmit="evaluateRisk(event)">
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">X1: Working Capital / Total Assets</label>
+                    <input type="number" step="0.01" id="x1" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition" placeholder="e.g. 0.15">
                 </div>
 
-                <div class="card bg-white p-4 mb-4">
-                    <h4 class="mb-3 fw-semibold text-secondary">Corporate Operational Telemetry</h4>
-                    <form action="/evaluate" method="POST">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium">Working Capital / Total Assets</label>
-                                <input type="number" step="any" name="working_capital" class="form-control" placeholder="e.g. 0.15" required>
-                                <div class="metric-help">Measures short-term liquidity health conditions.</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium">Retained Earnings / Total Assets</label>
-                                <input type="number" step="any" name="retained_earnings" class="form-control" placeholder="e.g. 0.30" required>
-                                <div class="metric-help">Measures cumulative profitability over time.</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium">EBITDA / Total Assets</label>
-                                <input type="number" step="any" name="ebitda" class="form-control" placeholder="e.g. 0.05" required>
-                                <div class="metric-help">Measures asset operational productivity margins.</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium">Alternative Textual Sentiment Score</label>
-                                <input type="number" step="any" min="-1" max="1" name="sentiment_score" class="form-control" placeholder="Range: -1.0 to 1.0" required>
-                                <div class="metric-help">Sentiment from latest news headlines or earnings calls.</div>
-                            </div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 mt-4 fw-bold py-2">Execute Risk Evaluation Pipeline</button>
-                    </form>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">X2: Retained Earnings / Total Assets</label>
+                    <input type="number" step="0.01" id="x2" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition" placeholder="e.g. 0.30">
                 </div>
 
-                {% if prediction_text %}
-                <div class="card p-4 text-white" style="background-color: {{ prediction_text.theme }};">
-                    <div class="row align-items-center">
-                        <div class="col-md-8">
-                            <h5 class="text-uppercase fw-bold opacity-75 mb-1">Evaluation Verdict</h5>
-                            <h3 class="fw-extrabold mb-0">{{ prediction_text.verdict }}</h3>
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">X3: EBITDA / Total Assets</label>
+                    <input type="number" step="0.01" id="x3" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition" placeholder="e.g. 0.12">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">X4: Market Cap / Total Liabilities</label>
+                    <input type="number" step="0.01" id="x4" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition" placeholder="e.g. 1.50">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-slate-300 mb-1">X5: Sales / Total Assets</label>
+                    <input type="number" step="0.01" id="x5" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition" placeholder="e.g. 1.10">
+                </div>
+
+                <div class="pt-2 border-t border-slate-700/50 mt-4">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-medium text-slate-300">Alternative Textual Sentiment Score</label>
+                        <span class="text-[10px] text-cyan-400 bg-cyan-900/30 px-2 py-0.5 rounded border border-cyan-800/40">FinBERT NLP Optimized</span>
+                    </div>
+                    <input type="number" step="0.1" min="-1" max="1" id="sentiment" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition" placeholder="Range: -1.0 (Distressed) to +1.0 (Bullish)">
+                </div>
+
+                <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm font-semibold py-3 px-4 rounded-xl mt-4 shadow-lg shadow-emerald-900/20 transition flex items-center justify-center space-x-2">
+                    <span>Execute Risk Evaluation</span>
+                </button>
+            </form>
+        </section>
+
+        <section class="lg:col-span-7 flex flex-col justify-between">
+            <div id="placeholderView" class="h-full flex flex-col items-center justify-center border border-dashed border-slate-700 rounded-2xl p-12 text-center bg-slate-800/20">
+                <div class="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 mb-4 text-slate-400 text-xl font-bold">?</div>
+                <h3 class="text-base font-semibold text-slate-200">Awaiting Evaluation Pipeline</h3>
+                <p class="text-xs text-slate-400 max-w-sm mt-1">Input operational parameters or click "Load Demo" to visualize the credit risk modeling output instantly.</p>
+            </div>
+
+            <div id="resultsView" class="hidden h-full flex flex-col justify-between bg-slate-800/40 border border-slate-700 rounded-2xl p-6 shadow-xl">
+                <div>
+                    <h2 class="text-lg font-semibold text-white mb-4">Risk Evaluation Summary</h2>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
+                            <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-medium">Calculated Altman Z-Score</span>
+                            <div id="zScoreOut" class="text-3xl font-bold mt-1 text-white">--</div>
                         </div>
-                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                            <h5 class="text-uppercase fw-bold opacity-75 mb-1">Calculated Stress Prob.</h5>
-                            <h2 class="fw-bold mb-0">{{ prediction_text.probability }}</h2>
+                        <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex flex-col justify-between">
+                            <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-medium">Financial Risk Zone</span>
+                            <div id="zoneBadge" class="inline-block self-start font-bold px-3 py-1 rounded-lg text-xs mt-2 border">--</div>
                         </div>
                     </div>
+
+                    <div class="bg-slate-900/40 border border-slate-700/40 rounded-xl p-4 mb-4">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-semibold text-slate-300">XGBoost ML Risk Probability</span>
+                            <span id="mlProb" class="text-sm font-bold text-cyan-400">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2">
+                            <div id="mlProgressBar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/20 border border-slate-800 rounded-xl p-4">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">System Interpretation</span>
+                        <p id="interpretationText" class="text-xs text-slate-300 leading-relaxed">--</p>
+                    </div>
                 </div>
-                {% endif %}
+
+                <div class="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-400 leading-relaxed">
+                    <strong>Methodology Note:</strong> Public manufacturing thresholds apply ($Z > 2.99$ Safe, $Z < 1.81$ Distress). FinBERT alignment dynamically adjusts predictive metrics inside the gradient-boosted pipeline.
+                </div>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
+
+    <footer class="max-w-7xl mx-auto px-4 py-6 border-t border-slate-800 text-center text-xs text-slate-500">
+        Disclaimer: This monitor is for educational and portfolio research purposes only. It does not constitute financial or investment advice.
+    </footer>
+
+    <script>
+        function loadDemoData() {
+            // High-Risk Distressed Case Data
+            document.getElementById('x1').value = -0.15;
+            document.getElementById('x2').value = -0.35;
+            document.getElementById('x3').value = -0.08;
+            document.getElementById('x4').value = 0.25;
+            document.getElementById('x5').value = 0.75;
+            document.getElementById('sentiment').value = -0.6;
+        }
+
+        async function evaluateRisk(event) {
+            event.preventDefault();
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span>Processing Pipeline...</span>';
+
+            const payload = {
+                working_capital_ta: parseFloat(document.getElementById('x1').value),
+                retained_earnings_ta: parseFloat(document.getElementById('x2').value),
+                ebitda_ta: parseFloat(document.getElementById('x3').value),
+                market_cap_tl: parseFloat(document.getElementById('x4').value),
+                sales_ta: parseFloat(document.getElementById('x5').value),
+                sentiment: parseFloat(document.getElementById('sentiment').value)
+            };
+
+            try {
+                // Call the prediction endpoint
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error('API Execution Failed');
+                const data = await response.json();
+
+                // Swap placeholders for the results presentation card
+                document.getElementById('placeholderView').classList.add('hidden');
+                const resultsView = document.getElementById('resultsView');
+                resultsView.classList.remove('hidden');
+
+                // Bind response payloads to UI nodes
+                document.getElementById('zScoreOut').innerText = data.altman_z_score;
+                document.getElementById('mlProb').innerText = data.ml_risk_probability + '%';
+                document.getElementById('mlProgressBar').style.width = data.ml_risk_probability + '%';
+
+                // Format Dynamic Risk Zone Badges
+                const badge = document.getElementById('zoneBadge');
+                badge.innerText = data.financial_risk_zone;
+                
+                let text = "";
+                if (data.financial_risk_zone === "Safe Zone") {
+                    badge.className = "inline-block font-bold px-3 py-1 rounded-lg text-xs mt-2 bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
+                    text = "The enterprise displays robust balance sheet health with strong working capital reserves and steady revenue generation. Combined with supportive textual data, insolvency risk is minimal.";
+                } else if (data.financial_risk_zone === "Grey Zone") {
+                    badge.className = "inline-block font-bold px-3 py-1 rounded-lg text-xs mt-2 bg-amber-500/10 border-amber-500/30 text-amber-400";
+                    text = "Operational metrics show structural instability or low asset turnover efficiency. The organization sits in a transition zone; careful monitoring of capital reserves and media sentiment is highly advised.";
+                } else {
+                    badge.className = "inline-block font-bold px-3 py-1 rounded-lg text-xs mt-2 bg-rose-500/10 border-rose-500/30 text-rose-400";
+                    text = "CRITICAL WARNING: The entity exhibits deep capital preservation distress, negative operational cash flows, or severe structural debt pressure. High probability of default or credit restructuring within 12-24 months.";
+                }
+                document.getElementById('interpretationText').innerText = text;
+
+            } catch (err) {
+                alert('Pipeline Processing Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span>Execute Risk Evaluation</span>';
+            }
+        }
+    </script>
 </body>
 </html>
