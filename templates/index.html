@@ -1,291 +1,109 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise Insolvency Risk Monitor</title>
+    <meta charset="UTF-8"><title>Enterprise Insolvency Risk Monitor</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen">
-
-    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-        <div class="flex items-center space-x-3">
-            <div class="h-3 w-3 bg-emerald-500 rounded-full animate-pulse"></div>
-            <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-                Insolvency Risk Monitor
-            </h1>
-        </div>
-        <div class="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
-            v3.2 Visual Trajectory Active
-        </div>
+    <header class="border-b border-slate-800 bg-slate-900/50 p-4 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-cyan-400">Insolvency Risk Monitor</h1>
+        <div class="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full">v4.0 Live Engine</div>
     </header>
-
-    <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        <section class="lg:col-span-5 bg-slate-800/50 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
-            <div class="mb-6 pb-6 border-b border-slate-700/50">
-                <label class="block text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-2">Automated Yahoo Finance Core Pull</label>
+    <main class="max-w-7xl mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <section class="lg:col-span-5 bg-slate-800/40 border border-slate-700 p-6 rounded-2xl">
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-cyan-400 mb-2">Yahoo Finance Ticker Search</label>
                 <div class="flex space-x-2">
-                    <input type="text" id="tickerInput" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 uppercase font-mono tracking-wider" placeholder="e.g. NVDA, AMC">
-                    <button type="button" onclick="fetchTickerRatios()" id="lookupBtn" class="bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold px-4 rounded-xl transition">
-                        Fetch Ratios
-                    </button>
+                    <input type="text" id="tickerInput" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 uppercase font-mono" placeholder="e.g. NVDA, AAPL">
+                    <button onclick="fetchTickerRatios()" id="lookupBtn" class="bg-cyan-600 px-4 rounded-xl text-xs font-bold">Fetch</button>
                 </div>
-                <p id="tickerFeedback" class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                    Type a global ticker symbol to fetch trailing datasets.
-                </p>
+                <p id="tickerFeedback" class="text-[11px] text-slate-400 mt-1">Ready for search pass.</p>
             </div>
-
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg font-semibold text-white">Financial & Alternative Inputs</h2>
-                <button type="button" onclick="loadDemoData()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg border border-slate-700 transition">
-                    ⚡ Reset Demo
-                </button>
-            </div>
-
-            <form id="riskForm" class="space-y-4" onsubmit="evaluateRisk(event)">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-300 mb-1">Corporate Profile Classification</label>
-                    <select id="firmType" onchange="handleFirmTypeChange()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-                        <option value="public">Publicly Traded Corporation</option>
-                        <option value="private">Private Limited Enterprise</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">X1: Working Capital / Total Assets</label>
-                    <input type="number" step="0.0001" id="x1" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">X2: Retained Earnings / Total Assets</label>
-                    <input type="number" step="0.0001" id="x2" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">X3: EBITDA / Total Assets</label>
-                    <input type="number" step="0.0001" id="x3" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-                </div>
-
-                <div>
-                    <label id="x4Label" class="block text-xs font-medium text-slate-300 mb-1">X4: Market Cap / Total Liabilities</label>
-                    <input type="number" step="0.0001" id="x4" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-medium text-slate-300 mb-1">X5: Sales / Total Assets</label>
-                    <input type="number" step="0.0001" id="x5" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-                </div>
-
-                <div class="pt-2 border-t border-slate-700/50 mt-4">
-                    <label class="block text-xs font-medium text-slate-300 mb-1">Alternative Textual Sentiment Score</label>
-                    <input type="number" step="0.01" min="-1" max="1" id="sentiment" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-                </div>
-
-                <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm font-semibold py-3 px-4 rounded-xl mt-4 transition flex items-center justify-center">
-                    <span id="btnText">Execute Risk Evaluation</span>
-                </button>
+            <form onsubmit="evaluateRisk(event)" class="space-y-4">
+                <div><label class="block text-xs text-slate-300">X1: Working Capital / TA</label><input type="number" step="0.0001" id="x1" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm"></div>
+                <div><label class="block text-xs text-slate-300">X2: Retained Earnings / TA</label><input type="number" step="0.0001" id="x2" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm"></div>
+                <div><label class="block text-xs text-slate-300">X3: EBITDA / TA</label><input type="number" step="0.0001" id="x3" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm"></div>
+                <div><label class="block text-xs text-slate-300">X4: Market Cap / TL</label><input type="number" step="0.0001" id="x4" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm"></div>
+                <div><label class="block text-xs text-slate-300">X5: Sales / TA</label><input type="number" step="0.0001" id="x5" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm"></div>
+                <div><label class="block text-xs text-slate-300">Sentiment Score Proxy</label><input type="number" step="0.01" id="sentiment" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm"></div>
+                <button type="submit" id="submitBtn" class="w-full bg-emerald-500 py-3 rounded-xl font-bold text-sm">Execute Evaluation</button>
             </form>
         </section>
-
-        <section class="lg:col-span-7 flex flex-col justify-between">
-            <div id="placeholderView" class="h-full flex flex-col items-center justify-center border border-dashed border-slate-700 rounded-2xl p-12 text-center bg-slate-800/20">
-                <div class="h-12 w-12 rounded-full bg-slate-800 flex items-center justify-center border border-slate-700 mb-4 text-slate-400 text-xl font-bold">?</div>
-                <h3 class="text-base font-semibold text-slate-200">Awaiting Evaluation Pipeline</h3>
-            </div>
-
-            <div id="resultsView" class="hidden h-full flex flex-col justify-between bg-slate-800/40 border border-slate-700 rounded-2xl p-6 shadow-xl">
+        <section class="lg:col-span-7">
+            <div id="placeholderView" class="border border-dashed border-slate-700 rounded-2xl p-12 text-center bg-slate-800/10">Awaiting Pipeline Execution Loop</div>
+            <div id="resultsView" class="hidden bg-slate-800/20 border border-slate-700 p-6 rounded-2xl flex flex-col justify-between h-full">
                 <div>
-                    <h2 class="text-lg font-semibold text-white mb-4">Risk Evaluation Summary</h2>
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                        <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
-                            <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-medium">Calculated Z-Score</span>
-                            <div id="zScoreOut" class="text-3xl font-bold mt-1 text-white">--</div>
-                        </div>
-                        <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex flex-col justify-between">
-                            <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-medium">Calibrated Risk Zone</span>
-                            <div id="zoneBadge" class="inline-block self-start font-bold px-3 py-1 rounded-lg text-xs mt-2 border">--</div>
-                        </div>
+                    <h2 class="text-lg font-semibold mb-4">Risk Evaluation Summary</h2>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="bg-slate-900 p-4 rounded-xl"><span class="text-[10px] text-slate-400 block">Z-SCORE</span><div id="zScoreOut" class="text-2xl font-bold">--</div></div>
+                        <div class="bg-slate-900 p-4 rounded-xl"><span class="text-[10px] text-slate-400 block">RISK ZONE</span><div id="zoneBadge" class="text-sm font-bold mt-1">--</div></div>
                     </div>
-
-                    <div class="bg-slate-900/40 border border-slate-700/40 rounded-xl p-4 mb-4">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-semibold text-slate-300">XGBoost ML Risk Probability</span>
-                            <span id="mlProb" class="text-sm font-bold text-cyan-400">0%</span>
-                        </div>
-                        <div class="w-full bg-slate-800 rounded-full h-2">
-                            <div id="mlProgressBar" class="bg-gradient-to-r from-cyan-400 to-blue-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
+                    <div class="bg-slate-900 p-4 rounded-xl mb-4">
+                        <div class="flex justify-between text-xs mb-1"><span>ML Default Probability</span><span id="mlProb" class="font-bold text-cyan-400">0%</span></div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full"><div id="mlProgressBar" class="bg-cyan-400 h-2 rounded-full transition-all duration-300" style="width: 0%"></div></div>
                     </div>
-
-                    <div class="bg-slate-900/20 border border-slate-800 rounded-xl p-4">
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">System Interpretation</span>
-                        <p id="interpretationText" class="text-xs text-slate-300 leading-relaxed">--</p>
-                    </div>
-
-                    <button type="button" onclick="downloadExecutivePDF()" class="w-full bg-slate-700 hover:bg-slate-600 text-xs font-semibold py-2.5 px-4 rounded-xl mt-4 border border-slate-600/50 transition text-center flex items-center justify-center space-x-2">
-                        <span>📥 Download Executive Risk Report (PDF)</span>
-                    </button>
+                    <button onclick="downloadExecutivePDF()" class="w-full bg-slate-700 py-2.5 rounded-xl text-xs font-semibold border border-slate-600">📥 Download Visual Executive Risk Report (PDF)</button>
                 </div>
             </div>
         </section>
     </main>
-
     <script>
-        let lastEvaluationData = null;
-        let activeCompanyName = "Custom Profile Evaluation";
-
-        function handleFirmTypeChange() {
-            const type = document.getElementById('firmType').value;
-            const label = document.getElementById('x4Label');
-            label.innerText = type === 'private' ? "X4: Book Value of Equity / Total Liabilities" : "X4: Market Cap / Total Liabilities";
-        }
-
-        function loadDemoData() {
-            document.getElementById('firmType').value = 'public';
-            handleFirmTypeChange();
-            document.getElementById('x1').value = (-0.1500).toFixed(4);
-            document.getElementById('x2').value = (-0.3500).toFixed(4);
-            document.getElementById('x3').value = (-0.0800).toFixed(4);
-            document.getElementById('x4').value = (2.5000).toFixed(4);
-            document.getElementById('x5').value = (0.7500).toFixed(4);
-            document.getElementById('sentiment').value = -0.65;
-            document.getElementById('tickerFeedback').innerHTML = 'Type a global ticker symbol to fetch trailing datasets.';
-        }
-
+        let lastEvaluationData = null, activeCompanyName = "Custom", activeTickerHistory = null;
         async function fetchTickerRatios() {
-            const symbol = document.getElementById('tickerInput').value.trim();
-            const btn = document.getElementById('lookupBtn');
-            const feedback = document.getElementById('tickerFeedback');
-            if (!symbol) return;
-            
-            btn.disabled = true;
-            feedback.innerHTML = `⏳ Fetching financial parameters for <span class="font-bold text-white uppercase">${symbol}</span>...`;
-
+            const s = document.getElementById("tickerInput").value.trim();
+            if(!s) return;
+            document.getElementById("tickerFeedback").innerText = "⏳ Fetching from Yahoo Finance...";
             try {
-                const response = await fetch(`/api/ticker/${symbol}`);
-                if (!response.ok) throw new Error('Symbol lookup failed or structural reporting incomplete.');
-                const data = await response.json();
-                
-                document.getElementById('x1').value = data.x1.toFixed(4);
-                document.getElementById('x2').value = data.x2.toFixed(4);
-                document.getElementById('x3').value = data.x3.toFixed(4);
-                document.getElementById('x4').value = data.x4.toFixed(4);
-                document.getElementById('x5').value = data.x5.toFixed(4);
-                document.getElementById('sentiment').value = data.x1 > 0 ? 0.25 : -0.35;
-                
-                activeCompanyName = data.company_name;
-                feedback.innerHTML = `✅ Data parsed successfully for: <strong class="text-cyan-400">${activeCompanyName}</strong>`;
-            } catch (err) {
-                feedback.innerHTML = `❌ Error: ${err.message}`;
-                alert(err.message);
-            } finally {
-                btn.disabled = false;
-            }
+                const r = await fetch("/api/ticker/" + s);
+                if(!r.ok) throw new Error("Lookup failure.");
+                const d = await r.json();
+                document.getElementById("x1").value = d.x1; document.getElementById("x2").value = d.x2;
+                document.getElementById("x3").value = d.x3; document.getElementById("x4").value = d.x4;
+                document.getElementById("x5").value = d.x5; document.getElementById("sentiment").value = d.sentiment;
+                activeCompanyName = d.company_name; activeTickerHistory = d.history;
+                document.getElementById("tickerFeedback").innerHTML = "✅ Active target: <b class='text-cyan-400'>" + activeCompanyName + "</b>";
+            } catch(e) { document.getElementById("tickerFeedback").innerText = "❌ Lookup error."; }
         }
-
-        async function evaluateRisk(event) {
-            event.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-
+        async function evaluateRisk(e) {
+            e.preventDefault();
             const payload = {
-                working_capital_ta: parseFloat(document.getElementById('x1').value),
-                retained_earnings_ta: parseFloat(document.getElementById('x2').value),
-                ebitda_ta: parseFloat(document.getElementById('x3').value),
-                market_cap_tl: parseFloat(document.getElementById('x4').value),
-                sales_ta: parseFloat(document.getElementById('x5').value),
-                sentiment: parseFloat(document.getElementById('sentiment').value),
-                firm_type: document.getElementById('firmType').value
+                working_capital_ta: parseFloat(document.getElementById("x1").value),
+                retained_earnings_ta: parseFloat(document.getElementById("x2").value),
+                ebitda_ta: parseFloat(document.getElementById("x3").value),
+                market_cap_tl: parseFloat(document.getElementById("x4").value),
+                sales_ta: parseFloat(document.getElementById("x5").value),
+                sentiment: parseFloat(document.getElementById("sentiment").value)
             };
-
             try {
-                const response = await fetch('/predict', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) throw new Error('API Execution Failed');
-                const data = await response.json();
-
-                document.getElementById('placeholderView').classList.add('hidden');
-                document.getElementById('resultsView').classList.remove('hidden');
-
-                document.getElementById('zScoreOut').innerText = data.altman_z_score;
-                document.getElementById('mlProb').innerText = data.ml_risk_probability + '%';
-                document.getElementById('mlProgressBar').style.width = data.ml_risk_probability + '%';
-
-                const badge = document.getElementById('zoneBadge');
-                badge.innerText = data.financial_risk_zone;
-
-                if (data.financial_risk_zone === "Safe Zone") {
-                    badge.className = "inline-block font-bold px-3 py-1 rounded-lg text-xs mt-2 bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
-                    document.getElementById('interpretationText').innerText = "The enterprise displays robust balance sheet health with strong capital reserves.";
-                } else if (data.financial_risk_zone === "Grey Zone") {
-                    badge.className = "inline-block font-bold px-3 py-1 rounded-lg text-xs mt-2 bg-amber-500/10 border-amber-500/30 text-amber-400";
-                    document.getElementById('interpretationText').innerText = "Operational metrics show structural instability. Monitoring is advised.";
-                } else {
-                    badge.className = "inline-block font-bold px-3 py-1 rounded-lg text-xs mt-2 bg-rose-500/10 border-rose-500/30 text-rose-400";
-                    document.getElementById('interpretationText').innerText = "CRITICAL WARNING: High probability of default within 12-24 months.";
-                }
-
-                // FIXED: Injects direct ticker symbol token for backend image path alignment mapping
-                const tickerVal = document.getElementById('tickerInput').value.trim().toUpperCase();
+                const r = await fetch("/predict", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+                const d = await r.json();
+                document.getElementById("placeholderView").classList.add("hidden");
+                document.getElementById("resultsView").classList.remove("hidden");
+                document.getElementById("zScoreOut").innerText = d.altman_z_score;
+                document.getElementById("mlProb").innerText = d.ml_risk_probability + "%";
+                document.getElementById("mlProgressBar").style.width = d.ml_risk_probability + "%";
+                document.getElementById("zoneBadge").innerText = d.financial_risk_zone;
+                
+                const tk = document.getElementById("tickerInput").value.trim().toUpperCase();
                 lastEvaluationData = {
-                    ticker_symbol: tickerVal || "CUSTOM",
-                    company_name: tickerVal ? activeCompanyName : "Custom Profile Evaluation",
-                    altman_z_score: data.altman_z_score,
-                    financial_risk_zone: data.financial_risk_zone,
-                    ml_risk_probability: data.ml_risk_probability,
-                    model_classification: data.model_classification,
-                    x1: payload.working_capital_ta,
-                    x2: payload.retained_earnings_ta,
-                    x3: payload.ebitda_ta,
-                    x4: payload.market_cap_tl,
-                    x5: payload.sales_ta,
-                    sentiment: payload.sentiment
+                    ticker_symbol: tk || "CUSTOM", company_name: tk ? activeCompanyName : "Custom",
+                    altman_z_score: d.altman_z_score, financial_risk_zone: d.financial_risk_zone,
+                    ml_risk_probability: d.ml_risk_probability, model_classification: d.model_classification,
+                    x1: payload.working_capital_ta, x2: payload.retained_earnings_ta, x3: payload.ebitda_ta,
+                    x4: payload.market_cap_tl, x5: payload.sales_ta, sentiment: payload.sentiment,
+                    history: activeTickerHistory
                 };
-
-            } catch (err) {
-                alert('Error: ' + err.message);
-            } finally {
-                btn.disabled = false;
-            }
+            } catch(err) { alert("Pipeline error."); }
         }
-
         async function downloadExecutivePDF() {
-            if (!lastEvaluationData) {
-                alert('Please execute a risk evaluation pipeline loop first before downloading reports.');
-                return;
-            }
+            if(!lastEvaluationData) return;
             try {
-                const response = await fetch('/api/report/download', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(lastEvaluationData)
-                });
-                
-                if (!response.ok) {
-                    const errDetails = await response.json();
-                    throw new Error(errDetails.detail || 'Failed processing report bytes.');
-                }
-                
-                const blob = await response.blob();
+                const r = await fetch("/api/report/download", { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(lastEvaluationData) });
+                const blob = await r.blob();
                 const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `Risk_Report_${lastEvaluationData.company_name.replace(/\s+/g, '_')}.pdf`;
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-            } catch (err) {
-                alert('PDF Engine Error: ' + err.message);
-            }
+                const a = document.createElement("a"); a.href = url; a.download = "Risk_Report.pdf"; document.body.appendChild(a); a.click(); a.remove();
+            } catch(e) { alert("PDF download failed."); }
         }
-
-        loadDemoData();
     </script>
 </body>
 </html>
