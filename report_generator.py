@@ -1,9 +1,10 @@
-﻿import os
+import os
 import io
 import joblib
 import pandas as pd
 import numpy as np
 import matplotlib
+# Absolute non-interactive canvas configuration layer for headless Linux server builds
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import shap
@@ -14,10 +15,19 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 
 def generate_live_plots(data: dict, ticker_token: str, output_dir: str):
+    """
+    Safely compiles Trajectory and SHAP plots on the fly under headless server environments.
+    """
     os.makedirs(output_dir, exist_ok=True)
+    
+    # Force generic fonts to prevent missing font crash bugs on Render Linux containers
+    matplotlib.rcParams['font.family'] = 'sans-serif'
+    matplotlib.rcParams['font.sans-serif'] = ['DejaVu Sans', 'Arial', 'Helvetica']
     plt.style.use("default")
     
     history = data.get("history") or [{"x1": data["x1"], "x3": data["x3"], "x5": data["x5"]}]
+    
+    # Plot 1: Financial Ratio Trajectories
     fig, ax = plt.subplots(figsize=(7, 4))
     chronological_history = history[::-1]
     years = [f"Y-{len(chronological_history)-1-i}" if (len(chronological_history)-1-i) > 0 else "Current" for i in range(len(chronological_history))]
@@ -31,6 +41,7 @@ def generate_live_plots(data: dict, ticker_token: str, output_dir: str):
     plt.savefig(os.path.join(output_dir, f"{ticker_token}_trends.png"), dpi=150)
     plt.close()
 
+    # Plot 2: Secure SHAP Matrix Generation Layer
     try:
         pipeline = joblib.load("pipeline.joblib")
         input_vector = pd.DataFrame([{
@@ -38,17 +49,34 @@ def generate_live_plots(data: dict, ticker_token: str, output_dir: str):
             "ebitda_ta": float(data["x3"]), "market_cap_tl": float(data["x4"]),
             "sales_ta": float(data["x5"]), "sentiment": float(data["sentiment"])
         }])
-        input_vector = input_vector[["working_capital_ta", "retained_earnings_ta", "ebitda_ta", "market_cap_tl", "sales_ta", "sentiment"]]
+        features_ordered = ["working_capital_ta", "retained_earnings_ta", "ebitda_ta", "market_cap_tl", "sales_ta", "sentiment"]
+        input_vector = input_vector[features_ordered]
+        
         scaled_values = pipeline.named_steps["scaler"].transform(input_vector)
         explainer = shap.TreeExplainer(pipeline.named_steps["xgb"])
         raw_shap_values = explainer.shap_values(scaled_values)
         
-        attributions = raw_shap_values[0] if len(raw_shap_values.shape) == 2 else raw_shap_values
+        # BULLETPROOF SHAPE SHIFTER GATE: Handles multiple dimensions gracefully across library versions
+        if hasattr(raw_shap_values, "values"):
+            attributions = raw_shap_values.values
+        else:
+            attributions = raw_shap_values
+            
+        if isinstance(attributions, list):
+            attributions = attributions[1] if len(attributions) > 1 else attributions[0]
+            
+        # Flatten structure down to a clean 1D array of 6 elements
+        attributions = np.asarray(attributions).squeeze()
+        if len(attributions.shape) > 1:
+            # If multi-class layout array remains, slice the positive class column axis index
+            attributions = attributions[:, 1].flatten() if attributions.shape[1] > 1 else attributions[:, 0].flatten()
+            
         feature_display_names = ["X1: Working Cap", "X2: Retained Earn", "X3: EBITDA", "X4: Market Cap", "X5: Sales", "Sentiment"]
         
         fig, ax = plt.subplots(figsize=(7, 4))
         y_pos = np.arange(len(feature_display_names))
         bar_colors = ["#10b981" if val < 0 else "#ef4444" for val in attributions]
+        
         ax.barh(y_pos, attributions, align="center", color=bar_colors, edgecolor="#cbd5e1", height=0.6)
         ax.set_yticks(y_pos)
         ax.set_yticklabels(feature_display_names, fontsize=9)
@@ -58,11 +86,13 @@ def generate_live_plots(data: dict, ticker_token: str, output_dir: str):
         plt.savefig(os.path.join(output_dir, f"{ticker_token}_shap.png"), dpi=150)
         plt.close()
     except Exception as e:
-        print(f"SHAP Error bypass: {e}")
+        print(f"SHAP Error bypass on Cloud Container: {e}")
 
 def generate_pdf_report(data: dict) -> io.BytesIO:
     ticker_token = str(data.get("ticker_symbol", "CUSTOM")).strip().upper()
     visuals_dir = "data/visuals"
+    
+    # Generate charts safely in memory
     generate_live_plots(data, ticker_token, visuals_dir)
     
     buffer = io.BytesIO()
@@ -72,9 +102,17 @@ def generate_pdf_report(data: dict) -> io.BytesIO:
     title_style = ParagraphStyle("DocTitle", parent=styles["Heading1"], fontSize=20, leading=24, textColor=colors.HexColor("#0f172a"))
     section_style = ParagraphStyle("SecTitle", parent=styles["Heading2"], fontSize=12, leading=16, textColor=colors.HexColor("#0284c7"), spaceBefore=10, spaceAfter=5)
     body_style = ParagraphStyle("Body", parent=styles["Normal"], fontSize=9, leading=13, textColor=colors.HexColor("#334155"))
+    
+    # Developer Credit Badge Layout
+    dev_badge_style = ParagraphStyle("DevBadge", parent=styles["Normal"], fontSize=8, leading=11, textColor=colors.HexColor("#475569"), alignment=2)
 
     story = [
-        Paragraph("EXECUTIVE CREDIT RISK EVALUATION REPORT", title_style),
+        # Lead Heading Header Block
+        Table([
+            [Paragraph("EXECUTIVE CREDIT RISK EVALUATION REPORT", title_style), 
+             Paragraph("<b>Lead Engineer:</b> Mihir Patel<br/><b>System Build:</b> v4.0 Multi-Model Core<br/><b>Location:</b> India HQ", dev_badge_style)]
+        ], colWidths=[360, 160], style=[('VALIGN', (0,0), (-1,-1), 'TOP'), ('BOTTOMPADDING', (0,0), (-1,-1), 10)]),
+        
         Paragraph(f"Target Entity Asset Profile: <b>{data.get('company_name', 'Unknown')} ({ticker_token})</b>", body_style),
         Spacer(1, 10),
         Paragraph("1. Core Predictive Risk Analytics", section_style)
@@ -103,8 +141,10 @@ def generate_pdf_report(data: dict) -> io.BytesIO:
     t_path = os.path.join(visuals_dir, f"{ticker_token}_trends.png")
     s_path = os.path.join(visuals_dir, f"{ticker_token}_shap.png")
     cells = []
-    cells.append(Image(t_path, width=250, height=142) if os.path.exists(t_path) else Paragraph("Pending...", body_style))
-    cells.append(Image(s_path, width=250, height=142) if os.path.exists(s_path) else Paragraph("Pending...", body_style))
+    
+    # Auto-fallback checks to verify plot existence
+    cells.append(Image(t_path, width=250, height=142) if os.path.exists(t_path) else Paragraph("Trajectory Matrix Generation Bypass", body_style))
+    cells.append(Image(s_path, width=250, height=142) if os.path.exists(s_path) else Paragraph("SHAP Matrix Generation Bypass", body_style))
     
     t_vis = Table([cells], colWidths=[260, 260])
     story.append(t_vis)
