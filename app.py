@@ -12,7 +12,7 @@ import os
 app = FastAPI(
     title="Enterprise Insolvency Risk Monitor API",
     description="Modified Altman Z-Score + FinBERT Sentiment Pipeline",
-    version="2.0"
+    version="2.1"
 )
 
 app.add_middleware(
@@ -33,18 +33,19 @@ except Exception as e:
     print(f"Error loading model binary: {e}")
     model = None
 
+# Upgraded Request Schema incorporating firm classification string
 class RiskEvaluationRequest(BaseModel):
     working_capital_ta: float = Field(..., description="X1: Working Capital / Total Assets")
     retained_earnings_ta: float = Field(..., description="X2: Retained Earnings / Total Assets")
     ebitda_ta: float = Field(..., description="X3: EBITDA / Total Assets")
-    market_cap_tl: float = Field(..., description="X4: Market Cap / Total Liabilities")
+    market_cap_tl: float = Field(..., description="X4: Market Cap or Book Value / Total Liabilities")
     sales_ta: float = Field(..., description="X5: Sales / Total Assets")
     sentiment: float = Field(..., description="Alternative Textual Sentiment Score (-1.0 to 1.0)")
+    firm_type: str = Field(default="public", description="Classification variant: public or private")
 
 @app.get("/", response_class=HTMLResponse)
 def home(request: Request):
     try:
-        # Fixed: Explicitly passing parameters resolves the unhashable type dictionary bug
         return templates.TemplateResponse(request=request, name="index.html")
     except Exception as e:
         print("\n" + "="*50 + "\nCRITICAL FRONTEND RENDER ERROR:\n" + "="*50)
@@ -67,25 +68,46 @@ def predict_risk(payload: RiskEvaluationRequest):
     }])
     
     try:
-        z_score = (
-            1.2 * payload.working_capital_ta +
-            1.4 * payload.retained_earnings_ta +
-            3.3 * payload.ebitda_ta +
-            0.6 * payload.market_cap_tl +
-            1.0 * payload.sales_ta
-        )
+        # Route logic according to structural variant selection
+        if payload.firm_type == "private":
+            # Dr. Edward Altman's Z'-Score Equation for Private Manufacturing Firms
+            # Z' = 0.717*X1 + 0.847*X2 + 3.107*X3 + 0.420*X4 + 0.998*X5
+            z_score = (
+                0.717 * payload.working_capital_ta +
+                0.847 * payload.retained_earnings_ta +
+                3.107 * payload.ebitda_ta +
+                0.420 * payload.market_cap_tl +
+                0.998 * payload.sales_ta
+            )
+            # Calibrate distinct private boundaries
+            if z_score >= 2.90:
+                zone = "Safe Zone"
+            elif z_score >= 1.23:
+                zone = "Grey Zone"
+            else:
+                zone = "Distress Zone"
+        else:
+            # Classic Altman Z-Score Equation for Public Manufacturing Firms
+            # Z = 1.2*X1 + 1.4*X2 + 3.3*X3 + 0.6*X4 + 1.0*X5
+            z_score = (
+                1.2 * payload.working_capital_ta +
+                1.4 * payload.retained_earnings_ta +
+                3.3 * payload.ebitda_ta +
+                0.6 * payload.market_cap_tl +
+                1.0 * payload.sales_ta
+            )
+            if z_score >= 2.99:
+                zone = "Safe Zone"
+            elif z_score >= 1.81:
+                zone = "Grey Zone"
+            else:
+                zone = "Distress Zone"
         
+        # Run ML inference
         prediction = int(model.predict(input_data)[0])
         probabilities = model.predict_proba(input_data)[0]
         risk_probability = float(probabilities[1])
         
-        if z_score >= 2.99:
-            zone = "Safe Zone"
-        elif z_score >= 1.81:
-            zone = "Grey Zone"
-        else:
-            zone = "Distress Zone"
-            
         return {
             "altman_z_score": round(z_score, 2),
             "financial_risk_zone": zone,
