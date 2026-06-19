@@ -1,34 +1,50 @@
-﻿import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import RobustScaler
-from sklearn.linear_model import LogisticRegression
-from imblearn.over_sampling import SMOTE
-from imblearn.pipeline import Pipeline
+﻿import pandas as pd
+import numpy as np
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from xgboost import XGBClassifier
 import joblib
 
-print('Simulating corporate health telemetry records...')
+print("Initializing upgraded synthetic training dataset generation...")
 np.random.seed(42)
-n_samples = 5000
-X_financials = np.random.normal(loc=[0.12, 0.25, 0.04], scale=[0.08, 0.12, 0.04], size=(n_samples, 3))
-X_sentiment = np.random.uniform(low=-0.9, high=0.7, size=(n_samples, 1))
-X_combined = np.hstack((X_financials, X_sentiment))
+num_samples = 2000
 
-risk_formula = (X_combined[:, 0] * -3.8) + (X_combined[:, 1] * -2.2) + (X_combined[:, 2] * -4.5) + (X_combined[:, 3] * -2.8)
-probabilities = 1 / (1 + np.exp(-risk_formula))
-y = (probabilities > 0.84).astype(int)
+is_distressed = np.random.choice([0, 1], size=num_samples, p=[0.85, 0.15])
 
-feature_columns = ['working_capital_ratio', 'retained_earnings_ratio', 'ebitda_ratio', 'sentiment_score']
-df = pd.DataFrame(X_combined, columns=feature_columns)
-X_train, X_test, y_train, y_test = train_test_split(df, y, test_size=0.25, random_state=42, stratify=y)
+working_capital_ta = np.where(is_distressed == 1, np.random.uniform(-0.2, 0.1, num_samples), np.random.uniform(0.1, 0.5, num_samples))
+retained_earnings_ta = np.where(is_distressed == 1, np.random.uniform(-0.5, 0.0, num_samples), np.random.uniform(0.1, 0.6, num_samples))
+ebitda_ta = np.where(is_distressed == 1, np.random.uniform(-0.3, 0.05, num_samples), np.random.uniform(0.05, 0.4, num_samples))
+market_cap_tl = np.where(is_distressed == 1, np.random.uniform(0.1, 0.5, num_samples), np.random.uniform(0.6, 3.0, num_samples))
+sales_ta = np.where(is_distressed == 1, np.random.uniform(0.2, 1.0, num_samples), np.random.uniform(0.8, 2.5, num_samples))
+sentiment = np.where(is_distressed == 1, np.random.uniform(-0.8, 0.1, num_samples), np.random.uniform(-0.1, 0.9, num_samples))
 
-bankruptcy_pipeline = Pipeline([
-    ('scaler', RobustScaler()),
-    ('resampler', SMOTE(random_state=42, sampling_strategy=0.35)),
-    ('classifier', LogisticRegression(C=0.85, class_weight='balanced', random_state=42))
+df = pd.DataFrame({
+    'working_capital_ta': working_capital_ta,
+    'retained_earnings_ta': retained_earnings_ta,
+    'ebitda_ta': ebitda_ta,
+    'market_cap_tl': market_cap_tl,
+    'sales_ta': sales_ta,
+    'sentiment': sentiment,
+    'risk_label': is_distressed
+})
+
+X = df.drop(columns=['risk_label'])
+y = df['risk_label']
+
+imbalance_ratio = np.sum(y == 0) / np.sum(y == 1)
+
+pipeline = Pipeline([
+    ('scaler', StandardScaler()),
+    ('classifier', XGBClassifier(
+        scale_pos_weight=imbalance_ratio,
+        max_depth=4,
+        learning_rate=0.05,
+        n_estimators=150,
+        eval_metric='logloss',
+        random_state=42
+    ))
 ])
 
-print('Training pipeline components on imbalanced metrics...')
-bankruptcy_pipeline.fit(X_train, y_train)
-joblib.dump(bankruptcy_pipeline, 'pipeline.joblib')
-print('SUCCESS: Operational pipeline binary compiled as pipeline.joblib')
+pipeline.fit(X, y)
+joblib.dump(pipeline, 'pipeline.joblib')
+print("SUCCESS: Full 5-Ratio + Sentiment pipeline compiled into 'pipeline.joblib'!")
