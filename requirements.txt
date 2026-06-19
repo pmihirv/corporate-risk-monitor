@@ -11,3 +11,5 @@ pytest
 jinja2
 yfinance
 reportlab
+shap
+matplotlib

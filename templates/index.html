@@ -16,31 +16,28 @@
             </h1>
         </div>
         <div class="text-xs text-slate-400 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
-            v3.2 Real-time Sync Active
+            v3.2 Visual Trajectory Active
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         <section class="lg:col-span-5 bg-slate-800/50 border border-slate-700/60 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
-            
             <div class="mb-6 pb-6 border-b border-slate-700/50">
                 <label class="block text-xs font-semibold text-cyan-400 uppercase tracking-wider mb-2">Automated Yahoo Finance Core Pull</label>
                 <div class="flex space-x-2">
-                    <input type="text" id="tickerInput" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 uppercase font-mono tracking-wider" placeholder="e.g. NVDA, AMC, RELIANCE.NS">
+                    <input type="text" id="tickerInput" class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 uppercase font-mono tracking-wider" placeholder="e.g. NVDA, AMC">
                     <button type="button" onclick="fetchTickerRatios()" id="lookupBtn" class="bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold px-4 rounded-xl transition">
                         Fetch Ratios
                     </button>
                 </div>
                 <p id="tickerFeedback" class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
-                    Type any global ticker. Try <span class="text-emerald-400 font-mono">NVDA</span> or <span class="text-rose-400 font-mono">AMC</span> to test structural limits.
+                    Type a global ticker symbol to fetch trailing datasets.
                 </p>
             </div>
 
             <div class="flex justify-between items-center mb-6">
-                <div>
-                    <h2 class="text-lg font-semibold text-white">Financial & Alternative Inputs</h2>
-                </div>
+                <h2 class="text-lg font-semibold text-white">Financial & Alternative Inputs</h2>
                 <button type="button" onclick="loadDemoData()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium px-3 py-1.5 rounded-lg border border-slate-700 transition">
                     ⚡ Reset Demo
                 </button>
@@ -50,8 +47,8 @@
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 mb-1">Corporate Profile Classification</label>
                     <select id="firmType" onchange="handleFirmTypeChange()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
-                        <option value="public">Publicly Traded Corporation (Classic Z-Score)</option>
-                        <option value="private">Private Limited Enterprise (Altman Z'-Score Variant)</option>
+                        <option value="public">Publicly Traded Corporation</option>
+                        <option value="private">Private Limited Enterprise</option>
                     </select>
                 </div>
 
@@ -85,7 +82,7 @@
                     <input type="number" step="0.01" min="-1" max="1" id="sentiment" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 transition">
                 </div>
 
-                <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm font-semibold py-3 px-4 rounded-xl mt-4 shadow-lg shadow-emerald-900/20 transition flex items-center justify-center">
+                <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white text-sm font-semibold py-3 px-4 rounded-xl mt-4 transition flex items-center justify-center">
                     <span id="btnText">Execute Risk Evaluation</span>
                 </button>
             </form>
@@ -103,7 +100,7 @@
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                         <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
-                            <span id="scoreLabel" class="text-[10px] uppercase tracking-wider text-slate-400 block font-medium">Calculated Z-Score</span>
+                            <span class="text-[10px] uppercase tracking-wider text-slate-400 block font-medium">Calculated Z-Score</span>
                             <div id="zScoreOut" class="text-3xl font-bold mt-1 text-white">--</div>
                         </div>
                         <div class="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 flex flex-col justify-between">
@@ -151,10 +148,10 @@
             document.getElementById('x1').value = (-0.1500).toFixed(4);
             document.getElementById('x2').value = (-0.3500).toFixed(4);
             document.getElementById('x3').value = (-0.0800).toFixed(4);
-            document.getElementById('x4').value = (0.2500).toFixed(4);
+            document.getElementById('x4').value = (2.5000).toFixed(4);
             document.getElementById('x5').value = (0.7500).toFixed(4);
             document.getElementById('sentiment').value = -0.65;
-            document.getElementById('tickerFeedback').innerHTML = 'Type any global ticker. Try <span class="text-emerald-400 font-mono">NVDA</span> or <span class="text-rose-400 font-mono">AMC</span> to test structural limits.';
+            document.getElementById('tickerFeedback').innerHTML = 'Type a global ticker symbol to fetch trailing datasets.';
         }
 
         async function fetchTickerRatios() {
@@ -179,8 +176,6 @@
                 document.getElementById('sentiment').value = data.x1 > 0 ? 0.25 : -0.35;
                 
                 activeCompanyName = data.company_name;
-                
-                // RESTORED: Flash the complete company corporate identity string right below the input box layout
                 feedback.innerHTML = `✅ Data parsed successfully for: <strong class="text-cyan-400">${activeCompanyName}</strong>`;
             } catch (err) {
                 feedback.innerHTML = `❌ Error: ${err.message}`;
@@ -236,8 +231,11 @@
                     document.getElementById('interpretationText').innerText = "CRITICAL WARNING: High probability of default within 12-24 months.";
                 }
 
+                // FIXED: Injects direct ticker symbol token for backend image path alignment mapping
+                const tickerVal = document.getElementById('tickerInput').value.trim().toUpperCase();
                 lastEvaluationData = {
-                    company_name: document.getElementById('tickerInput').value.trim() ? activeCompanyName : "Custom Profile Evaluation",
+                    ticker_symbol: tickerVal || "CUSTOM",
+                    company_name: tickerVal ? activeCompanyName : "Custom Profile Evaluation",
                     altman_z_score: data.altman_z_score,
                     financial_risk_zone: data.financial_risk_zone,
                     ml_risk_probability: data.ml_risk_probability,
@@ -268,6 +266,12 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(lastEvaluationData)
                 });
+                
+                if (!response.ok) {
+                    const errDetails = await response.json();
+                    throw new Error(errDetails.detail || 'Failed processing report bytes.');
+                }
+                
                 const blob = await response.blob();
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
